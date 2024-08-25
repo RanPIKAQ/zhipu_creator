@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Content Generation</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h1>Content Generation</h1>
+<form id="generationForm" method="post" action="/generate">
+    <label for="api_key">API Key:</label>
+    <input type="text" id="api_key" name="api_key" required>
+    <label for="prompt">Prompt:</label>
+    <input type="text" id="prompt" name="prompt" required>
+    <label for="generation_type">Generation Type:</label>
+    <select id="generation_type" name="generation_type">
+        <option value="video">Video</option>
+        <option value="image">Image</option>
+    </select>
+    <button type="submit">Generate</button>
+</form>
+
+<div id="status"></div>
+<div id="result"></div>
+<div id="timer"></div>
+
+<script>
+$(document).ready(function() {
+    let timerInterval;
+
+    $('#generationForm').on('submit', function(e) {
+        e.preventDefault();
+        const api_key = $('#api_key').val();
+        const prompt = $('#prompt').val();
+        const generation_type = $('#generation_type').val();
+        $('#status').html('<p>Generating content...</p>');
+        $('#timer').html('<p>Time elapsed: 0 seconds</p>');
+        let seconds = 0;
+        timerInterval = setInterval(function() {
+            seconds++;
+            $('#timer').html('<p>Time elapsed: ' + seconds + ' seconds</p>');
+        }, 1000);
+
+        $.ajax({
+            url: '/generate',
+            type: 'POST',
+            data: { api_key: api_key, prompt: prompt, generation_type: generation_type },
+            success: function(data) {
+                clearInterval(timerInterval);
+                if (data.status === "success") {
+                    $('#status').html('<p>Content generated successfully! Elapsed time: ' + data.elapsed_time + ' seconds</p>');
+                    if (data.type === "video") {
+                        $('#result').html('Video Url: ' + '<a href="' + data.url + '" target="_blank">' + data.url + '</a>');
+                    } else if (data.type === "image") {
+                        $('#result').html('Image Url: ' + '<a href="' + data.url + '" target="_blank">' + data.url + '</a>');
+                    }
+                } else {
+                    $('#status').html('<p>Error: ' + data.error + '</p>');
+                }
+            },
+            error: function(error) {
+                clearInterval(timerInterval);
+                $('#status').html('<p>Error: ' + error.responseText + '</p>');
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

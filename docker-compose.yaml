@@ -1,0 +1,8 @@
+services:
+  zhipu-web:
+    image: zhipu-web:latest
+    build: .
+    ports:
+      - "7777:5000"
+    volumes:
+      - ./:/app
